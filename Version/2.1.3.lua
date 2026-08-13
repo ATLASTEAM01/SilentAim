@@ -1,5 +1,41 @@
---傻逼要是敢二改直接全家死光
---脚本由euphoria制作😂
+--[[
+               AAA         TTTTTTTTTTTTTTTTTTTTTTTLLLLLLLLLLL                            AAA                 SSSSSSSSSSSSSSS 
+              A:::A        T:::::::::::::::::::::TL:::::::::L                           A:::A              SS:::::::::::::::S
+             A:::::A       T:::::::::::::::::::::TL:::::::::L                          A:::::A            S:::::SSSSSS::::::S
+            A:::::::A      T:::::TT:::::::TT:::::TLL:::::::LL                         A:::::::A           S:::::S     SSSSSSS
+           A:::::::::A     TTTTTT  T:::::T  TTTTTT  L:::::L                          A:::::::::A          S:::::S            
+          A:::::A:::::A            T:::::T          L:::::L                         A:::::A:::::A         S:::::S            
+         A:::::A A:::::A           T:::::T          L:::::L                        A:::::A A:::::A         S::::SSSS         
+        A:::::A   A:::::A          T:::::T          L:::::L                       A:::::A   A:::::A         SS::::::SSSSS    
+       A:::::A     A:::::A         T:::::T          L:::::L                      A:::::A     A:::::A          SSS::::::::SS  
+      A:::::AAAAAAAAA:::::A        T:::::T          L:::::L                     A:::::AAAAAAAAA:::::A            SSSSSS::::S 
+     A:::::::::::::::::::::A       T:::::T          L:::::L                    A:::::::::::::::::::::A                S:::::S
+    A:::::AAAAAAAAAAAAA:::::A      T:::::T          L:::::L         LLLLLL    A:::::AAAAAAAAAAAAA:::::A               S:::::S
+   A:::::A             A:::::A   TT:::::::TT      LL:::::::LLLLLLLLL:::::L   A:::::A             A:::::A  SSSSSSS     S:::::S
+  A:::::A               A:::::A  T:::::::::T      L::::::::::::::::::::::L  A:::::A               A:::::A S::::::SSSSSS:::::S
+ A:::::A                 A:::::A T:::::::::T      L::::::::::::::::::::::L A:::::A                 A:::::AS:::::::::::::::SS 
+AAAAAAA                   AAAAAAATTTTTTTTTTT      LLLLLLLLLLLLLLLLLLLLLLLLAAAAAAA                   AAAAAAASSSSSSSSSSSSSSS
+
+╔═══════════════════════════════╗
+║                    ⚠️  二改警告  ⚠️                 ║
+╚═══════════════════════════════╝
+
+本脚本由【euphoria】原创制作，版权归原作者所有
+
+严禁任何个人或组织进行以下行为：
+· 二改 / 魔改 / 伪原创 / 倒卖 / 盗用 / 二次分发
+· 修改作者署名、删除本警告、添加自己的水印
+· 以任何形式重新打包、上传、出售本脚本
+
+敢二改的傻逼听好了：
+直接全家死光、断子绝孙、祖坟冒烟、三代倒霉
+父母双亡、妻离子散、车祸瘫痪、癌症晚期、债台高筑
+
+原作者保留一切解释权、追究权、以及让你后悔出生的权利
+二改即视为你自愿接受以上全部后果，无任何异议可提
+
+脚本由 euphoria 制作 😂
+]]
 
 
 
