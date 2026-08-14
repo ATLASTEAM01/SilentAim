@@ -40,6 +40,12 @@ AAAAAAA                   AAAAAAATTTTTTTTTTT      LLLLLLLLLLLLLLLLLLLLLLLLAAAAAA
 
 
 
+--傻逼要是敢二改直接全家死光
+--脚本由euphoria制作😂
+
+
+
+
 task.spawn(function()
     pcall(function()
         local AnalyticsPipeline = require(game:GetService("ReplicatedFirst"):WaitForChild("AnalyticsPipelineController"):WaitForChild("AnalyticsPipeline"))
@@ -74,6 +80,10 @@ local SilentAimSettings = {
     IgnoreTransparent = true,
     TargetPart = "HumanoidRootPart",
     SilentAimMethod = "Raycast",
+    AimMethod = "aimbot",
+    AimbotFOVRadius = 200,
+    AimbotPredictionFactor = 0.042,
+    AimbotAimSpeed = 10,
     FOVRadius = 130,
     FOVThickness = 1,
     FOVTransparency = 0.5,
@@ -1284,6 +1294,23 @@ local function getFreeFOVRadius(camDist)
     return math.clamp(radius, SilentAimSettings.FreeFOVMinSize, SilentAimSettings.FreeFOVMaxSize)
 end
 
+local function isTargetInsideFreeFOV(part)
+    if not part then return false end
+    local localRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return false end
+
+    local physicalDist = (localRoot.Position - part.Position).Magnitude
+    if physicalDist > SilentAimSettings.MaxDistance then return false end
+
+    local screenPos, onScreen = getPositionOnScreen(part.Position)
+    if not onScreen then return false end
+
+    local AimPoint = SilentAimSettings.FixedFOV and (Camera.ViewportSize / 2) or GetMouseLocation(UserInputService)
+    local fovDist = (AimPoint - screenPos).Magnitude
+    local camDist = (Camera.CFrame.Position - part.Position).Magnitude
+    return fovDist <= getFreeFOVRadius(camDist)
+end
+
 local function getTargetAimingAtUs()
     local localChar = LocalPlayer.Character
     if not localChar or not localChar:FindFirstChild("HumanoidRootPart") then return nil end
@@ -1399,6 +1426,9 @@ local function getClosestPlayer()
                                 local fovDist = (AimPoint - ScreenPosition).Magnitude
                                 
                                 local currentRadius = SilentAimSettings.FOVRadius
+                                if SilentAimSettings.AimMethod == "V5.0 自瞄" then
+                                    currentRadius = SilentAimSettings.AimbotFOVRadius
+                                end
                                 if SilentAimSettings.DynamicFOVScale then
                                     local scale = math.tan(math.rad(SilentAimSettings.InitialCameraFOV) / 2) / math.tan(math.rad(Camera.FieldOfView) / 2)
                                     currentRadius = currentRadius * scale
@@ -1409,7 +1439,9 @@ local function getClosestPlayer()
                                     currentRadius = getFreeFOVRadius(camDist)
                                 end
 
-                                if fovDist <= currentRadius then
+                                if SilentAimSettings.FreeFOVEnabled then
+                                    table.insert(candidates, {character = Character, fov = fovDist, dist = physicalDist, health = Humanoid.Health})
+                                elseif fovDist <= currentRadius then
                                     table.insert(candidates, {character = Character, fov = fovDist, dist = physicalDist, health = Humanoid.Health})
                                 end
                             end
@@ -1468,12 +1500,21 @@ local function getNPCTarget()
                                 local fovDist = (AimPoint - ScreenPosition).Magnitude
                                 
                                 local currentRadius = SilentAimSettings.FOVRadius
+                                if SilentAimSettings.AimMethod == "V5.0 自瞄" then
+                                    currentRadius = SilentAimSettings.AimbotFOVRadius
+                                end
                                 if SilentAimSettings.DynamicFOVScale then
                                     local scale = math.tan(math.rad(SilentAimSettings.InitialCameraFOV) / 2) / math.tan(math.rad(Camera.FieldOfView) / 2)
                                     currentRadius = currentRadius * scale
                                 end
+                                if SilentAimSettings.FreeFOVEnabled then
+                                    local camDist = (Camera.CFrame.Position - partForChecks.Position).Magnitude
+                                    currentRadius = getFreeFOVRadius(camDist)
+                                end
 
-                                if fovDist <= currentRadius then
+                                if SilentAimSettings.FreeFOVEnabled then
+                                    table.insert(candidates, {character = NPCModel, fov = fovDist, dist = physicalDist, health = Humanoid.Health})
+                                elseif fovDist <= currentRadius then
                                     table.insert(candidates, {character = NPCModel, fov = fovDist, dist = physicalDist, health = Humanoid.Health})
                                 end
                             end
@@ -1693,7 +1734,12 @@ local Tabs = {
 
 local MainSettingsBox = Tabs.Main:AddLeftGroupbox("主设置")
 MainSettingsBox:AddToggle("EnabledToggle", { Text = "启用", Default = SilentAimSettings.Enabled }):AddKeyPicker("EnabledKeybind", { Default = SilentAimSettings.ToggleKey, SyncToggleState = true, Mode = "Toggle" })
-Toggles.EnabledToggle:OnChanged(function(Value) SilentAimSettings.Enabled = Value end)
+Toggles.EnabledToggle:OnChanged(function(Value)
+    SilentAimSettings.Enabled = Value
+    if SilentAimSettings.AimMethod == "V5.0 自瞄" then
+        getgenv().AimBotEnabled = Value
+    end
+end)
 
 MainSettingsBox:AddDropdown("TargetChecksDropdown", {
     Text = "安全检测 (多选)",
@@ -1767,6 +1813,25 @@ local LockAimedTab = AimlockTabbox:AddTab("被瞄反杀")
 AimlockTab:AddToggle("AimlockToggle", { Text = "启用自瞄 (视角追踪)", Default = SilentAimSettings.AimlockEnabled }):AddKeyPicker("AimlockKeybind", { Default = SilentAimSettings.AimlockKey, SyncToggleState = true, Mode = "Toggle" })
 AimlockTab:AddToggle("AimlockSnapCamera", { Text = "锁定镜头视角 (Camera Snap)", Default = SilentAimSettings.AimlockSnapCamera }):OnChanged(function(Value) SilentAimSettings.AimlockSnapCamera = Value end)
 AimlockTab:AddSlider("AimlockSmoothnessSlider", { Text = "平滑度 (1=无平滑)", Min = 0.01, Max = 1, Default = SilentAimSettings.AimlockSmoothness, Rounding = 2 }):OnChanged(function(Value) SilentAimSettings.AimlockSmoothness = Value end)
+AimlockTab:AddDropdown("AimMethodDropdown", { Text = "瞄准方法", Default = SilentAimSettings.AimMethod, Values = {"aimbot", "V5.0 自瞄"} }):OnChanged(function(Value)
+    SilentAimSettings.AimMethod = Value
+    if Value == "V5.0 自瞄" then
+        FOVCircleFrame.Size = UDim2.fromOffset(SilentAimSettings.AimbotFOVRadius * 2, SilentAimSettings.AimbotFOVRadius * 2)
+        getgenv().AimBotEnabled = Toggles.EnabledToggle.Value or false
+    else
+        FOVCircleFrame.Size = UDim2.fromOffset(SilentAimSettings.FOVRadius * 2, SilentAimSettings.FOVRadius * 2)
+        getgenv().AimBotEnabled = false
+    end
+    Library:Notify("瞄准方法: " .. Value)
+end)
+AimlockTab:AddSlider("AimbotFOVSlider", { Text = "V5自瞄FOV范围", Min = 10, Max = 1000, Default = SilentAimSettings.AimbotFOVRadius, Rounding = 0 }):OnChanged(function(Value)
+    SilentAimSettings.AimbotFOVRadius = Value
+    if SilentAimSettings.AimMethod == "V5.0 自瞄" then
+        FOVCircleFrame.Size = UDim2.fromOffset(Value * 2, Value * 2)
+    end
+end)
+AimlockTab:AddSlider("AimbotPredictionSlider", { Text = "V5自瞄预判量", Min = 0, Max = 0.3, Default = SilentAimSettings.AimbotPredictionFactor, Rounding = 3 }):OnChanged(function(Value) SilentAimSettings.AimbotPredictionFactor = Value end)
+AimlockTab:AddSlider("AimbotAimSpeedSlider", { Text = "V5自瞄速度", Min = 1, Max = 30, Default = SilentAimSettings.AimbotAimSpeed, Rounding = 0 }):OnChanged(function(Value) SilentAimSettings.AimbotAimSpeed = Value end)
 AimlockTab:AddToggle("ShowMobileAimlockButton", { Text = "显示自瞄按钮 (移动端)", Default = SilentAimSettings.ShowMobileAimlockButton }):OnChanged(function(Value)
     SilentAimSettings.ShowMobileAimlockButton = Value
     MobileAimlockButton.Visible = Value
@@ -2451,8 +2516,8 @@ local WatermarkConnection = RunService.RenderStepped:Connect(function()
     end
 end)
 
-FOVCircleGui.Enabled = Toggles.FOVVisibleToggle.Value
-FOVCircleFrame.Size = UDim2.fromOffset(Options.FOVRadiusSlider.Value * 2, Options.FOVRadiusSlider.Value * 2)
+FOVCircleGui.Enabled = Toggles.FOVVisibleToggle.Value or SilentAimSettings.AimMethod == "V5.0 自瞄"
+FOVCircleFrame.Size = UDim2.fromOffset((SilentAimSettings.AimMethod == "V5.0 自瞄" and SilentAimSettings.AimbotFOVRadius or Options.FOVRadiusSlider.Value) * 2, (SilentAimSettings.AimMethod == "V5.0 自瞄" and SilentAimSettings.AimbotFOVRadius or Options.FOVRadiusSlider.Value) * 2)
 IndependentPanelFrame.Draggable = not SilentAimSettings.IndependentPanelPinned
 
 task.spawn(function()
@@ -3372,7 +3437,7 @@ resume(create(function()
             end
         end
 
-        local damageHumanoid = isTargetingEnabled and currentTargetPart and currentTargetPart.Parent:FindFirstChildOfClass("Humanoid") or nil
+        local damageHumanoid = isTargetingEnabled and currentTargetPart and currentTargetPart.Parent and currentTargetPart.Parent:FindFirstChildOfClass("Humanoid") or nil
         watchDamageHumanoid(damageHumanoid, currentTargetPart)
 
         for humanoid, data in pairs(pendingDamage) do
@@ -3575,7 +3640,8 @@ resume(create(function()
         local activeFreeFOVs = 0
         DynamicIsland.freeFOVTarget = nil
 
-        if Toggles.FOVVisibleToggle.Value then
+        if Toggles.FOVVisibleToggle.Value or SilentAimSettings.AimMethod == "V5.0 自瞄" then
+            FOVCircleGui.Enabled = true
             local fovColor = getDynamicColor(Options.FOVColorModeDropdown.Value, Options.FOVColorPicker.Value, Options.FOVColorPicker2.Value, Options.FOVGradientSpeedSlider.Value)
             local fovThickness = Options.FOVThicknessSlider.Value
             local fovTransparency = Options.FOVTransparencySlider.Value
@@ -3785,6 +3851,9 @@ resume(create(function()
                 end
                 
                 local currentRadius = SilentAimSettings.FOVRadius
+                if SilentAimSettings.AimMethod == "V5.0 自瞄" then
+                    currentRadius = SilentAimSettings.AimbotFOVRadius
+                end
                 if SilentAimSettings.DynamicFOVScale then
                     local scale = math.tan(math.rad(SilentAimSettings.InitialCameraFOV) / 2) / math.tan(math.rad(Camera.FieldOfView) / 2)
                     currentRadius = currentRadius * scale
@@ -3792,6 +3861,7 @@ resume(create(function()
                 FOVCircleFrame.Size = UDim2.fromOffset(currentRadius * 2, currentRadius * 2)
             end
         else
+            FOVCircleGui.Enabled = Toggles.FOVVisibleToggle.Value
             FOVCircleFrame.Visible = false
         end
 
@@ -3832,35 +3902,49 @@ resume(create(function()
             end
         end
 
-        if currentAimlockState and currentTargetPart then
-            local targetPos = currentTargetPart.Position
-            if SilentAimSettings.MouseHitPrediction then
-                targetPos = targetPos + (currentTargetPart.Velocity * SilentAimSettings.MouseHitPredictionAmount)
-            end
-            
-            local smoothness = Options.AimlockSmoothnessSlider.Value
-            
-            if SilentAimSettings.AimlockSnapCamera then
-                local cameraCFrame = Camera.CFrame
-                local targetLookCFrame = CFrame.lookAt(cameraCFrame.Position, targetPos)
-                if smoothness < 1 then
-                    Camera.CFrame = cameraCFrame:Lerp(targetLookCFrame, smoothness)
-                else
-                    Camera.CFrame = targetLookCFrame
+        if SilentAimSettings.AimMethod == "aimbot" and currentAimlockState and currentTargetPart then
+            if not SilentAimSettings.FreeFOVEnabled or isTargetInsideFreeFOV(currentTargetPart) then
+                local targetPos = currentTargetPart.Position
+                if SilentAimSettings.MouseHitPrediction then
+                    targetPos = targetPos + (currentTargetPart.Velocity * SilentAimSettings.MouseHitPredictionAmount)
                 end
-            else
-                local char = LocalPlayer.Character
-                local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    local hrpPos = hrp.Position
-                    local lookAtPos = Vector3.new(targetPos.X, hrpPos.Y, targetPos.Z)
-                    local targetCFrame = CFrame.lookAt(hrpPos, lookAtPos)
+                
+                local smoothness = Options.AimlockSmoothnessSlider.Value
+                
+                if SilentAimSettings.AimlockSnapCamera then
+                    local cameraCFrame = Camera.CFrame
+                    local targetLookCFrame = CFrame.lookAt(cameraCFrame.Position, targetPos)
                     if smoothness < 1 then
-                        hrp.CFrame = hrp.CFrame:Lerp(targetCFrame, smoothness)
+                        Camera.CFrame = cameraCFrame:Lerp(targetLookCFrame, smoothness)
                     else
-                        hrp.CFrame = targetCFrame
+                        Camera.CFrame = targetLookCFrame
+                    end
+                else
+                    local char = LocalPlayer.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local hrpPos = hrp.Position
+                        local lookAtPos = Vector3.new(targetPos.X, hrpPos.Y, targetPos.Z)
+                        local targetCFrame = CFrame.lookAt(hrpPos, lookAtPos)
+                        if smoothness < 1 then
+                            hrp.CFrame = hrp.CFrame:Lerp(targetCFrame, smoothness)
+                        else
+                            hrp.CFrame = targetCFrame
+                        end
                     end
                 end
+            end
+        end
+        
+        if SilentAimSettings.AimMethod == "V5.0 自瞄" and Toggles.EnabledToggle.Value and currentTargetPart and (not SilentAimSettings.FreeFOVEnabled or isTargetInsideFreeFOV(currentTargetPart)) then
+            local aimChar = currentTargetPart.Parent
+            if aimChar and aimChar:FindFirstChild("Head") then
+                local aimHead = aimChar.Head
+                local primaryPart = aimChar.PrimaryPart or aimChar:FindFirstChild("HumanoidRootPart")
+                local velocity = primaryPart and primaryPart.AssemblyLinearVelocity or Vector3.zero
+                local predictedPos = aimHead.Position + (velocity * SilentAimSettings.AimbotPredictionFactor)
+                local alpha = math.clamp(SilentAimSettings.AimbotAimSpeed * 0.1, 0, 1)
+                Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, predictedPos), alpha)
             end
         end
         
